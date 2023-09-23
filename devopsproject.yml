@@ -1,0 +1,38 @@
+- name: Perform Server Checks
+  hosts: master
+  gather_facts: yes
+  tasks:
+    - name: Ping the Server
+      ping:
+      register: ping_status
+
+    - name: Check Hardware Health
+      command: lshw
+      register: hardware_health_output
+
+    - name: Get OS Version and Updates
+      command: cat /etc/redhat-release
+      register: os_version
+
+    - name: Check Filesystem and Disk Space
+      command: df -Th
+      register: filesystem_space
+
+    - name: Save Server Status to File
+      copy:
+        content: |
+          ----------------------------------------------------------------------------------------------------
+          Ping Status: 
+          {{ ping_status }}
+          ----------------------------------------------------------------------------------------------------
+          Hardware Health Status: 
+          {{ hardware_health_output.stdout | replace('\n', '\n' + '-' * 100 + '\n') }}
+          ----------------------------------------------------------------------------------------------------
+          OS Version: 
+          {{ os_version.stdout | replace('\n', '\n' + '-' * 100 + '\n') }}
+          ----------------------------------------------------------------------------------------------------
+          Filesystem Space: 
+          {{ filesystem_space.stdout | replace('\n', '\n' + '-' * 100 + '\n') }}
+          ----------------------------------------------------------------------------------------------------
+        dest: "/home/vaidhi/Documents/Playbooks/output/server_status.txt"
+      delegate_to: localhost
